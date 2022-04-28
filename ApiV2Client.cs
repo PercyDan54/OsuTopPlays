@@ -30,7 +30,7 @@ namespace OsuTopPlays {
             return null;
         }
 #nullable disable
-        public Score[] GetUserBestScores(string userId)
+        public Score[] GetUserBestScores(int userId)
         {
             var req = new HttpRequestMessage(HttpMethod.Get, $"https://osu.ppy.sh/api/v2/users/{userId}/scores/best?limit=100");
 
@@ -46,9 +46,9 @@ namespace OsuTopPlays {
             return null;
         }
 
-/*        public APIBeatmap GetBeatmap(string beatmapID)
+        public APIUser GetUser(string user)
         {
-            var req = new HttpRequestMessage(HttpMethod.Get, $"https://osu.ppy.sh/api/v2/beatmaps/{beatmapID}");
+            var req = new HttpRequestMessage(HttpMethod.Get, $"https://osu.ppy.sh/api/v2/users/{user}");
 
             req.Headers.Add("Authorization", $"Bearer {token}");
             req.Headers.Add("Accept", "application/json");
@@ -57,9 +57,9 @@ namespace OsuTopPlays {
             if (resp.IsSuccessStatusCode)
             {
                 string str = resp.Content.ReadAsStringAsync().Result;
-                return JsonConvert.DeserializeObject<APIBeatmap>(str);
+                return JsonConvert.DeserializeObject<APIUser>(str);
             }
-            return null;
-        }*/
+            return new APIUser();
+        }
     }
 }
