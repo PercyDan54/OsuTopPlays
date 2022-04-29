@@ -6,15 +6,25 @@ using static System.Environment;
 
 namespace OsuTopPlays
 {
-    internal class Program
+    internal class OsuTopPlays
     {
         private static void Main(string[] args)
         {
-            WriteLine("正在获取Access Token... 在这里卡超过半分钟建议重启本程序");
             var client = new ApiV2Client();
             Start:
             Write("输入用户名/UID：");
             var user = client.GetUser(ReadLine());
+            if (!getBpInfo(client, user))
+                goto Start;
+            Write("按任意键继续...");
+            ReadKey();
+            Clear();
+            goto Start;
+            // ReSharper disable once FunctionNeverReturns
+        }
+
+        private static bool getBpInfo(ApiV2Client client, APIUser user)
+        {
             var scores = client.GetUserBestScores(user.Id);
 
             if (scores == null || scores.Length < 2)
@@ -22,23 +32,23 @@ namespace OsuTopPlays
                 ForegroundColor = ConsoleColor.Red;
                 WriteLine("获取bp失败！ 请确认用户存在");
                 ResetColor();
-                goto Start;
+                return false;
             }
 
             var modPp = new Dictionary<string, double>
             {
-                { "None", 0 }
+                {"None", 0}
             };
             var modCombinationPp = new Dictionary<string, double>
             {
-                { "None", 0 }
+                {"None", 0}
             };
-            var mostUsedModCombination = new Dictionary<string, int>();
+            var mostUsedModCombinations = new Dictionary<string, int>();
             var mostUsedMods = new Dictionary<string, int>();
             var mapperCount = new Dictionary<int, int>();
             var highestPpSpeed = (0, -1.0);
             var pp = new List<double>();
-            var beatmapLength = new List<double>();
+            var beatmapLengths = new List<double>();
             int sotarks = 0;
 
             Clear();
@@ -50,9 +60,10 @@ namespace OsuTopPlays
             for (int i = 0; i < count; i++)
             {
                 var score = scores[i];
+                string beatmapDifficultyName = score.Beatmap.DifficultyName;
                 if (score.Beatmap.AuthorID == 4452992 ||
-                    score.Beatmap.DifficultyName.Contains("Sotarks's", StringComparison.InvariantCultureIgnoreCase) ||
-                    score.Beatmap.DifficultyName.Contains("Sotarks'", StringComparison.InvariantCultureIgnoreCase))
+                    beatmapDifficultyName.Contains("Sotarks's", StringComparison.InvariantCultureIgnoreCase) ||
+                    beatmapDifficultyName.Contains("Sotarks'", StringComparison.InvariantCultureIgnoreCase))
                     sotarks++;
 
                 double scorePp = score.PP ?? 0;
@@ -66,7 +77,7 @@ namespace OsuTopPlays
                 if (score.Mods.Contains("HT"))
                     length /= 0.75;
 
-                beatmapLength.Add(length);
+                beatmapLengths.Add(length);
 
                 double ppSpeed = scorePp / length;
                 if (ppSpeed > highestPpSpeed.Item2)
@@ -74,11 +85,12 @@ namespace OsuTopPlays
 
                 rankCounts[score.Rank]++;
 
-                string[] scoreModsList = score.ModsList.Select(k => k.Replace("PF", string.Empty).Replace("SD", string.Empty)).ToArray();
+                string[] scoreModsList = score.ModsList.Select(k => k.Replace("PF", string.Empty).Replace("SD", string.Empty))
+                    .ToArray();
                 if (score.ModsList.Length > 0)
                 {
-                    mostUsedModCombination.TryAdd(score.Mods, 0);
-                    mostUsedModCombination[score.Mods]++;
+                    mostUsedModCombinations.TryAdd(score.Mods, 0);
+                    mostUsedModCombinations[score.Mods]++;
 
                     modCombinationPp.TryAdd(score.Mods, 0);
                     modCombinationPp[score.Mods] += scorePp;
@@ -113,6 +125,7 @@ namespace OsuTopPlays
                 if (rankCount > 0)
                     Write($"{rank}： {rankCount} ");
             }
+
             WriteLine();
 
             var mostMapper = mapperCount.OrderByDescending(v => v.Value).ToArray();
@@ -121,16 +134,17 @@ namespace OsuTopPlays
             {
                 mostMappers += $"{client.GetUser(mostMapper[i].Key.ToString()).Username}（{mostMapper[i].Value}次）{(i == 4 ? NewLine : "，")}";
             }
+
             Write($"{NewLine}其中你吃了{sotarks}坨Sotarks的屎。出现次数最多的mapper是 {mostMappers}");
-            double avgLength = beatmapLength.Average();
+            double avgLength = beatmapLengths.Average();
             double ppSum = pp.Sum();
             WriteLine($"{NewLine}平均{ppSum / user.Statistics.PlayCount:F}pp/pc");
-            WriteLine($"每张图平均时长：{TimeSpan.FromSeconds(avgLength):hh\\:mm\\:ss}，有 {scores.Count(s => s.Beatmap.Length > avgLength)} 张图大于平均长度，有{beatmapLength.Count(k => k < 45)}张小于45秒的图，最长的图长度{TimeSpan.FromSeconds(beatmapLength.Max(s => s)):hh\\:mm\\:ss}");
+            WriteLine($"每张图平均时长：{TimeSpan.FromSeconds(avgLength):hh\\:mm\\:ss}，有 {scores.Count(s => s.Beatmap.Length > avgLength)} 张图大于平均长度，有{beatmapLengths.Count(k => k < 45)}张小于45秒的图，最长的图长度{TimeSpan.FromSeconds(beatmapLengths.Max(s => s)):hh\\:mm\\:ss}");
             WriteLine();
             WriteLine($"bp{count}的平均pp：{pp.Average():F}pp，bp1与bp{count}相差 {pp[0] - pp[^1]:N}pp，平均星级{scores.Select(s => s.Beatmap.StarRating).Average():F}*");
             WriteLine($"pp到账最快的是bp{highestPpSpeed.Item1}，平均每秒{highestPpSpeed.Item2:N}pp");
 
-            mostUsedModCombination = mostUsedModCombination.OrderByDescending(v => v.Value).ToDictionary(p => p.Key, p => p.Value);
+            mostUsedModCombinations = mostUsedModCombinations.OrderByDescending(v => v.Value).ToDictionary(p => p.Key, p => p.Value);
             mostUsedMods = mostUsedMods.OrderByDescending(v => v.Value).ToDictionary(p => p.Key, p => p.Value);
             modPp = modPp.OrderByDescending(v => v.Value).ToDictionary(p => p.Key, p => p.Value);
             modCombinationPp = modCombinationPp.OrderByDescending(v => v.Value).ToDictionary(p => p.Key, p => p.Value);
@@ -140,8 +154,8 @@ namespace OsuTopPlays
                 Write($"{mod}: {mostUsedMods[mod]} ");
 
             Write($"{NewLine}你最常用的mod组合：");
-            foreach (string mod in mostUsedModCombination.Keys)
-                Write($"{mod}: {mostUsedModCombination[mod]} ");
+            foreach (string mod in mostUsedModCombinations.Keys)
+                Write($"{mod}: {mostUsedModCombinations[mod]} ");
 
             WriteLine();
             Write($"{NewLine}pp最多的mod：");
@@ -159,10 +173,7 @@ namespace OsuTopPlays
             }
 
             WriteLine(NewLine);
-            Write("按任意键继续...");
-            ReadKey();
-            Clear();
-            goto Start;
+            return true;
         }
     }
 }

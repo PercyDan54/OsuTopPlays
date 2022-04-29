@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace OsuTopPlays {
     public class AccessTokenResponse {
@@ -8,5 +9,8 @@ namespace OsuTopPlays {
         public int ExpiresIn { get; set; }
         [JsonProperty("access_token")]  
         public string AccessToken { get; set; }
+
+        [JsonProperty]
+        public DateTimeOffset Time;
     }
 }
