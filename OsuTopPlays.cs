@@ -8,17 +8,34 @@ namespace OsuTopPlays
 {
     internal class OsuTopPlays
     {
+        public static Config Config;
         private static ApiV2Client client;
-        private static readonly Dictionary<int, string> usernameCache = new Dictionary<int, string>();
+        private const string window_title = "bp分析 by PercyDan";
 
         private static void Main(string[] args)
         {
+            try
+            {
+                Config = Config.ReadJson<Config>("config.json");
+            }
+            catch
+            {
+                Config = new Config
+                {
+                    AccessToken = ApiV2Client.GetAccessToken(),
+                    UsernameCache = new Dictionary<int, string>()
+                };
+                Config.WriteJson("config.json", Config);
+            }
             client = new ApiV2Client();
+
             Start:
+            Title = window_title;
             Write("输入用户名/UID：");
             var user = client.GetUser(ReadLine());
             if (!getBpInfo(user))
                 goto Start;
+            Config.WriteJson("config.json", Config);
             Write("按任意键继续...");
             ReadKey();
             Clear();
@@ -38,6 +55,7 @@ namespace OsuTopPlays
                 return false;
             }
 
+            Title = $"{window_title} - {user}";
             var modPp = new Dictionary<string, double>
             {
                 {"None", 0}
@@ -155,11 +173,11 @@ namespace OsuTopPlays
             mostPpMappers += $"快说，谢谢{lookupUser(mostPpMapper[0].Key)}{NewLine}";
 
             WriteLine($"{NewLine}其中你吃了{sotarks}坨Sotarks的屎。");
-            Write($"{NewLine}出现次数最多的mapper是 {mostMappers}");
-            Write($"送你pp最多的mapper是 {mostPpMappers}");
+            Write($"{NewLine}出现次数最多的mapper有 {mostMappers}");
+            Write($"送你pp最多的mapper有 {mostPpMappers}");
             double avgLength = beatmapLengths.Average();
             double ppSum = pp.Sum();
-            WriteLine($"{NewLine}平均{ppSum / user.Statistics.PlayCount:F}pp/pc");
+            WriteLine($"{NewLine}平均{ppSum / user.Statistics.PlayCount:F}pp/pc， {ppSum / (user.Statistics.TotalHits / 1000d):F}pp/1000hits");
             WriteLine($"每张图平均时长：{TimeSpan.FromSeconds(avgLength):hh\\:mm\\:ss}，有 {scores.Count(s => s.Beatmap.Length > avgLength)} 张图大于平均长度，有{beatmapLengths.Count(k => k < 45)}张小于45秒的图，最长的图长度{TimeSpan.FromSeconds(beatmapLengths.Max()):hh\\:mm\\:ss}");
             WriteLine();
             WriteLine($"bp{count}的平均pp：{pp.Average():F}pp，bp1与bp{count}相差 {pp[0] - pp[^1]:N}pp，平均星级{scores.Select(s => s.Beatmap.StarRating).Average():F}*，平均BPM：{bpmList.Average():F}BPM");
@@ -199,10 +217,10 @@ namespace OsuTopPlays
 
         private static string lookupUser(int userId)
         {
-            if (usernameCache.TryGetValue(userId, out string name))
+            if (Config.UsernameCache.TryGetValue(userId, out string name))
                 return name;
 
-            usernameCache.Add(userId, name = client.GetUser(userId.ToString()).Username);
+            Config.UsernameCache.Add(userId, name = client.GetUser(userId.ToString()).Username);
             return name;
         }
     }

@@ -1,32 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using Newtonsoft.Json;
 
 namespace OsuTopPlays {
     public class ApiV2Client {
-        private readonly HttpClient client = new HttpClient();
+        private static readonly HttpClient client = new HttpClient();
         private readonly string accessToken;
 
         public ApiV2Client()
         {
             AccessTokenResponse token;
-            bool hasToken = false;
-            try
-            {
-                token = ReadJson<AccessTokenResponse>("config.json");
-                hasToken = true;
-            }
-            catch
-            {
-                token = GetAccessToken();
-            }
+            token = OsuTopPlays.Config.AccessToken;
+
             if (token.Time.Add(TimeSpan.FromSeconds(token.ExpiresIn)) < DateTimeOffset.UtcNow)
             {
                 token = GetAccessToken();
             }
-            else if (hasToken)
+            else
             {
                 Console.WriteLine("已有缓存的Access Token");
             }
@@ -34,20 +25,7 @@ namespace OsuTopPlays {
 
         }
 
-        public static T ReadJson<T>(string file)
-        {
-            using StreamReader streamReader = File.OpenText(file);
-            var obj = JsonConvert.DeserializeObject<T>(streamReader.ReadToEnd());
-            return obj;
-        }
-
-        public static void WriteJson<T>(string file, T obj)
-        {
-            using StreamWriter streamWriter = new StreamWriter(file, false);
-            streamWriter.Write(JsonConvert.SerializeObject(obj));
-        }
-
-        public AccessTokenResponse GetAccessToken() {
+        public static AccessTokenResponse GetAccessToken() {
             
             var data = new Dictionary<string, string> {
                 // From https://github.com/ppy/osu/blob/master/osu.Game/Online/ProductionEndpointConfiguration.cs
@@ -64,7 +42,6 @@ namespace OsuTopPlays {
                 string? str = resp.Content.ReadAsStringAsync().Result;
                 var accessTokenResponse = JsonConvert.DeserializeObject<AccessTokenResponse>(str)!;
                 accessTokenResponse.Time = DateTimeOffset.UtcNow;
-                WriteJson("config.json", accessTokenResponse);
                 return accessTokenResponse;
             }
             return null;
