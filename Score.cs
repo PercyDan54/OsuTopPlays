@@ -22,6 +22,9 @@ namespace OsuTopPlays
         [JsonProperty(@"replay")]
         public bool HasReplay { get; set; }
 
+        [JsonProperty(@"perfect")]
+        public bool Perfect;
+
         [JsonProperty(@"created_at")]
         public DateTimeOffset Date { get; set; }
 

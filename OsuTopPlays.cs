@@ -118,8 +118,7 @@ namespace OsuTopPlays
 
                 rankCounts[score.Rank]++;
 
-                string[] scoreModsList = score.ModsList.Select(k => k.Replace("PF", string.Empty).Replace("SD", string.Empty))
-                    .ToArray();
+                string[] scoreModsList = score.ModsList.Select(k => k.Replace("PF", string.Empty).Replace("SD", string.Empty)).ToArray();
                 if (score.ModsList.Length > 0)
                 {
                     mostUsedModCombinations.TryAdd(score.Mods, 0);
@@ -159,7 +158,7 @@ namespace OsuTopPlays
                     Write($"{rank}： {rankCount} ");
             }
 
-            WriteLine();
+            WriteLine($"{NewLine}有 {scores.Count(s => s.Perfect)} 个满combo，{scores.Count(s => s.Statistics["count_miss"] == 1)} 个1miss，{scores.Count(s => s.Statistics["count_100"] == 1)}个 1x100");
 
             var mostMapper = mapperCount.OrderByDescending(v => v.Value).ToArray();
             var mostPpMapper = mapperPp.OrderByDescending(v => v.Value).ToArray();
