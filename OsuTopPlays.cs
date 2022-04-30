@@ -169,17 +169,17 @@ namespace OsuTopPlays
                 mostMappers += $"{lookupUser(mostMapper[i].Key)}（{mostMapper[i].Value}次）{(i == 4 ? NewLine : "，")}";
                 mostPpMappers += $"{lookupUser(mostPpMapper[i].Key)}（{mostPpMapper[i].Value:F}pp）{(i == 4 ? "。" : "，")}";
             }
-            mostPpMappers += $"快说，谢谢{lookupUser(mostPpMapper[0].Key)}{NewLine}";
+            mostPpMappers += $"快说，谢谢{lookupUser(mostPpMapper[0].Key)}";
 
             WriteLine($"{NewLine}其中你吃了{sotarks}坨Sotarks的屎。");
             Write($"{NewLine}出现次数最多的mapper有 {mostMappers}");
-            Write($"送你pp最多的mapper有 {mostPpMappers}");
+            WriteLine($"送你pp最多的mapper有 {mostPpMappers}");
             double avgLength = beatmapLengths.Average();
             double ppSum = pp.Sum();
             WriteLine($"{NewLine}平均{ppSum / user.Statistics.PlayCount:F}pp/pc， {ppSum / (user.Statistics.TotalHits / 1000d):F}pp/1000hits");
             WriteLine($"每张图平均时长：{TimeSpan.FromSeconds(avgLength):hh\\:mm\\:ss}，有 {scores.Count(s => s.Beatmap.Length > avgLength)} 张图大于平均长度，有{beatmapLengths.Count(k => k < 45)}张小于45秒的图，最长的图长度{TimeSpan.FromSeconds(beatmapLengths.Max()):hh\\:mm\\:ss}");
             WriteLine();
-            WriteLine($"bp{count}的平均pp：{pp.Average():F}pp，bp1与bp{count}相差 {pp[0] - pp[^1]:N}pp，平均星级{scores.Select(s => s.Beatmap.StarRating).Average():F}*，平均BPM：{bpmList.Average():F}BPM");
+            WriteLine($"bp{count}的平均pp：{pp.Average():F}pp，bp1与bp{count}相差 {pp[0] - pp[^1]:N}pp，平均星级{scores.Average(s => s.Beatmap.StarRating):F}*，平均BPM：{bpmList.Average():F}BPM");
             WriteLine($"pp到账最快的是bp{highestPpSpeed.Item1}，平均每秒{highestPpSpeed.Item2:N}pp");
 
             mostUsedModCombinations = mostUsedModCombinations.OrderByDescending(v => v.Value).ToDictionary(p => p.Key, p => p.Value);
@@ -195,8 +195,8 @@ namespace OsuTopPlays
             foreach (string mod in mostUsedModCombinations.Keys)
                 Write($"{mod}: {mostUsedModCombinations[mod]} ");
 
-            WriteLine();
-            Write($"{NewLine}pp最多的mod：");
+            WriteLine(NewLine);
+            Write("pp最多的mod：");
             foreach (string mod in modPp.Keys)
             {
                 double pp1 = modPp[mod];
