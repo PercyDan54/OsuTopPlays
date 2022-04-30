@@ -50,6 +50,7 @@ namespace OsuTopPlays {
         public AccessTokenResponse GetAccessToken() {
             
             var data = new Dictionary<string, string> {
+                // From https://github.com/ppy/osu/blob/master/osu.Game/Online/ProductionEndpointConfiguration.cs
                 { "client_id", "5" },
                 { "client_secret", "FGc9GAtyHzeQDshWP5Ah7dega8hJACAJpQtw6OXk" },
                 { "grant_type", "client_credentials" },

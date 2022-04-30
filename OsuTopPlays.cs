@@ -8,13 +8,16 @@ namespace OsuTopPlays
 {
     internal class OsuTopPlays
     {
+        private static ApiV2Client client;
+        private static readonly Dictionary<int, string> usernameCache = new Dictionary<int, string>();
+
         private static void Main(string[] args)
         {
-            var client = new ApiV2Client();
+            client = new ApiV2Client();
             Start:
             Write("输入用户名/UID：");
             var user = client.GetUser(ReadLine());
-            if (!getBpInfo(client, user))
+            if (!getBpInfo(user))
                 goto Start;
             Write("按任意键继续...");
             ReadKey();
@@ -23,7 +26,7 @@ namespace OsuTopPlays
             // ReSharper disable once FunctionNeverReturns
         }
 
-        private static bool getBpInfo(ApiV2Client client, APIUser user)
+        private static bool getBpInfo(APIUser user)
         {
             var scores = client.GetUserBestScores(user.Id);
 
@@ -46,8 +49,10 @@ namespace OsuTopPlays
             var mostUsedModCombinations = new Dictionary<string, int>();
             var mostUsedMods = new Dictionary<string, int>();
             var mapperCount = new Dictionary<int, int>();
+            var mapperPp = new Dictionary<int, double>();
             var highestPpSpeed = (0, -1.0);
             var pp = new List<double>();
+            var bpmList = new List<double>();
             var beatmapLengths = new List<double>();
             int sotarks = 0;
 
@@ -70,14 +75,24 @@ namespace OsuTopPlays
                 pp.Add(scorePp);
                 mapperCount.TryAdd(score.Beatmap.AuthorID, 0);
                 mapperCount[score.Beatmap.AuthorID]++;
+                mapperPp.TryAdd(score.Beatmap.AuthorID, 0);
+                mapperPp[score.Beatmap.AuthorID] += scorePp;
 
                 double length = score.Beatmap.Length;
+                double bpm = score.Beatmap.BPM;
                 if (score.Mods.Contains("DT") || score.Mods.Contains("NC"))
+                {
                     length /= 1.5;
+                    bpm *= 1.5;
+                }
                 if (score.Mods.Contains("HT"))
+                {
                     length /= 0.75;
+                    bpm *= 0.75;
+                }
 
                 beatmapLengths.Add(length);
+                bpmList.Add(bpm);
 
                 double ppSpeed = scorePp / length;
                 if (ppSpeed > highestPpSpeed.Item2)
@@ -129,19 +144,25 @@ namespace OsuTopPlays
             WriteLine();
 
             var mostMapper = mapperCount.OrderByDescending(v => v.Value).ToArray();
+            var mostPpMapper = mapperPp.OrderByDescending(v => v.Value).ToArray();
             string mostMappers = string.Empty;
-            for (int i = 0; i < 5; i++)
+            string mostPpMappers = string.Empty;
+            for (int i = 0; i < Math.Min(5, mostMapper.Length); i++)
             {
-                mostMappers += $"{client.GetUser(mostMapper[i].Key.ToString()).Username}（{mostMapper[i].Value}次）{(i == 4 ? NewLine : "，")}";
+                mostMappers += $"{lookupUser(mostMapper[i].Key)}（{mostMapper[i].Value}次）{(i == 4 ? NewLine : "，")}";
+                mostPpMappers += $"{lookupUser(mostPpMapper[i].Key)}（{mostPpMapper[i].Value:F}pp）{(i == 4 ? "。" : "，")}";
             }
+            mostPpMappers += $"快说，谢谢{lookupUser(mostPpMapper[0].Key)}{NewLine}";
 
-            Write($"{NewLine}其中你吃了{sotarks}坨Sotarks的屎。出现次数最多的mapper是 {mostMappers}");
+            WriteLine($"{NewLine}其中你吃了{sotarks}坨Sotarks的屎。");
+            Write($"{NewLine}出现次数最多的mapper是 {mostMappers}");
+            Write($"送你pp最多的mapper是 {mostPpMappers}");
             double avgLength = beatmapLengths.Average();
             double ppSum = pp.Sum();
             WriteLine($"{NewLine}平均{ppSum / user.Statistics.PlayCount:F}pp/pc");
-            WriteLine($"每张图平均时长：{TimeSpan.FromSeconds(avgLength):hh\\:mm\\:ss}，有 {scores.Count(s => s.Beatmap.Length > avgLength)} 张图大于平均长度，有{beatmapLengths.Count(k => k < 45)}张小于45秒的图，最长的图长度{TimeSpan.FromSeconds(beatmapLengths.Max(s => s)):hh\\:mm\\:ss}");
+            WriteLine($"每张图平均时长：{TimeSpan.FromSeconds(avgLength):hh\\:mm\\:ss}，有 {scores.Count(s => s.Beatmap.Length > avgLength)} 张图大于平均长度，有{beatmapLengths.Count(k => k < 45)}张小于45秒的图，最长的图长度{TimeSpan.FromSeconds(beatmapLengths.Max()):hh\\:mm\\:ss}");
             WriteLine();
-            WriteLine($"bp{count}的平均pp：{pp.Average():F}pp，bp1与bp{count}相差 {pp[0] - pp[^1]:N}pp，平均星级{scores.Select(s => s.Beatmap.StarRating).Average():F}*");
+            WriteLine($"bp{count}的平均pp：{pp.Average():F}pp，bp1与bp{count}相差 {pp[0] - pp[^1]:N}pp，平均星级{scores.Select(s => s.Beatmap.StarRating).Average():F}*，平均BPM：{bpmList.Average():F}BPM");
             WriteLine($"pp到账最快的是bp{highestPpSpeed.Item1}，平均每秒{highestPpSpeed.Item2:N}pp");
 
             mostUsedModCombinations = mostUsedModCombinations.OrderByDescending(v => v.Value).ToDictionary(p => p.Key, p => p.Value);
@@ -174,6 +195,15 @@ namespace OsuTopPlays
 
             WriteLine(NewLine);
             return true;
+        }
+
+        private static string lookupUser(int userId)
+        {
+            if (usernameCache.TryGetValue(userId, out string name))
+                return name;
+
+            usernameCache.Add(userId, name = client.GetUser(userId.ToString()).Username);
+            return name;
         }
     }
 }
