@@ -17,6 +17,7 @@ namespace OsuTopPlays
             try
             {
                 Config = Config.ReadJson<Config>("config.json");
+                WriteLine("已有缓存的Access Token");
             }
             catch
             {

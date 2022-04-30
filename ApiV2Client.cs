@@ -17,10 +17,6 @@ namespace OsuTopPlays {
             {
                 token = GetAccessToken();
             }
-            else
-            {
-                Console.WriteLine("已有缓存的Access Token");
-            }
             accessToken = token.AccessToken;
 
         }
