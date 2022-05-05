@@ -37,6 +37,9 @@ namespace OsuTopPlays
         [JsonProperty(@"pp")]
         public double? PP { get; set; }
 
+        [JsonProperty("weight")]
+        public Weight Weight { get; set; }
+
         [JsonProperty(@"beatmapset")]
         public APIBeatmapSet BeatmapSet
         {
@@ -81,13 +84,35 @@ namespace OsuTopPlays
 
         public override string ToString()
         {
-            string str = $"{Rank} {PP}pp {MaxCombo}x {Beatmap} {Accuracy:P} ";
+            string str = $"{Rank} {PP:F2}pp ({Weight.PP:F}pp) {MaxCombo}x {Beatmap} {Accuracy:P}";
+
             if (Mods.Length > 0)
             {
-                str += $"+{Mods}";
+                str += $" +{Mods}";
+            }
+
+            if (Statistics["count_miss"] == 1)
+            {
+                str += " 1miss";
+            }
+            else if (Statistics["count_100"] == 1 || Statistics["count_katu"] == 1)
+            {
+                str += " 1x100";
+            }
+            if (Perfect)
+            {
+                str += " FC";
             }
             return str;
         }
+    }
+
+    public class Weight
+    {
+        [JsonProperty("percentage")]
+        public double Percentage;
+        [JsonProperty("pp")]
+        public double PP;
     }
 
     public enum ScoreRank

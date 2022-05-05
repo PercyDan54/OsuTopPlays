@@ -10,11 +10,11 @@ namespace OsuTopPlays {
 
         public ApiV2Client()
         {
-            AccessTokenResponse token;
-            token = OsuTopPlays.Config.AccessToken;
+            var token = OsuTopPlays.Config.AccessToken;
 
             if (token.Time.Add(TimeSpan.FromSeconds(token.ExpiresIn)) < DateTimeOffset.UtcNow)
             {
+                Console.WriteLine("Access Token 已失效");
                 token = GetAccessToken();
             }
             accessToken = token.AccessToken;
@@ -31,7 +31,7 @@ namespace OsuTopPlays {
                 { "scope", "public" }
             };
             var req = new FormUrlEncodedContent(data);
-            Console.WriteLine("正在获取Access Token... 在这里卡超过半分钟建议重启本程序");
+            Console.WriteLine("正在获取Access Token... 在这里卡超过一分钟建议重启本程序");
             var resp = client.PostAsync("https://osu.ppy.sh/oauth/token", req).Result;
 
             if (resp.IsSuccessStatusCode) {

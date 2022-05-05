@@ -5,6 +5,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <Authors>PercyDan</Authors>
     <ApplicationIcon>oof.ico</ApplicationIcon>
+    <Company>PercyDan</Company>
+    <Copyright>PercyDan</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
