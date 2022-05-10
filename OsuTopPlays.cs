@@ -26,9 +26,9 @@ namespace OsuTopPlays
                     AccessToken = ApiV2Client.GetAccessToken(),
                     UsernameCache = new Dictionary<int, string>()
                 };
-                Config.WriteJson("config.json", Config);
             }
             client = new ApiV2Client();
+            Config.WriteJson("config.json", Config);
 
             Start:
             Title = window_title;

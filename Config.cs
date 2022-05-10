@@ -13,12 +13,7 @@ namespace OsuTopPlays
         [JsonProperty]
         public Dictionary<int, string> UsernameCache;
 
-        public static T ReadJson<T>(string file)
-        {
-            using StreamReader streamReader = File.OpenText(file);
-            var obj = JsonConvert.DeserializeObject<T>(streamReader.ReadToEnd());
-            return obj;
-        }
+        public static T ReadJson<T>(string file) => JsonConvert.DeserializeObject<T>(File.ReadAllText(file));
 
         public static void WriteJson<T>(string file, T obj)
         {

@@ -15,7 +15,7 @@ namespace OsuTopPlays {
             if (token.Time.Add(TimeSpan.FromSeconds(token.ExpiresIn)) < DateTimeOffset.UtcNow)
             {
                 Console.WriteLine("Access Token 已失效");
-                token = GetAccessToken();
+                token = OsuTopPlays.Config.AccessToken = GetAccessToken();
             }
             accessToken = token.AccessToken;
 
